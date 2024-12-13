@@ -153,6 +153,14 @@ int aliceVision_main(int argc, char** argv)
             }
         }
     }
+
+    for (const auto & pair : pairs)
+    {
+        Pair symmetry;
+        symmetry.first = pair.second;
+        symmetry.second = pair.first;
+        pairs.insert(symmetry);
+    }
     
     if (pairs.empty())
     {
@@ -202,9 +210,11 @@ int aliceVision_main(int argc, char** argv)
         IndexT referenceId = pair.first;
         IndexT nextId = pair.second;
 
+        bool inverse = false;
         if (pairwiseMatches.count(pair) == 0)
         {
             std::swap(pair.first, pair.second);
+            inverse = true;
         }
 
         if (pairwiseMatches.count(pair) == 0)
@@ -253,12 +263,17 @@ int aliceVision_main(int argc, char** argv)
             }
         }
 
+        if (inverse)
+        {
+            std::swap(x1, x2);
+        }
+
         using SolverT = multiview::relativePose::Fundamental7PSolver;
         using ModelT = robustEstimation::Mat3Model;
 
         // define the AContrario adapted Fundamental matrix solver
         using KernelT = multiview::RelativePoseKernel<SolverT,
-                                                      multiview::relativePose::FundamentalEpipolarDistanceError,
+                                                      multiview::relativePose::FundamentalSymmetricEpipolarDistanceError,
                                                       multiview::UnnormalizerT,
                                                       ModelT>;
 
@@ -277,6 +292,23 @@ int aliceVision_main(int argc, char** argv)
         outputPair.next = nextId;
         outputPair.model = m_F;
         outputPair.score = ACRansacOut.first;
+
+        std::cout << out_inliers.size() << std::endl;
+
+        count = 0;
+        multiview::relativePose::FundamentalEpipolarDistanceError err;
+        for (int i = 0; i < pos; i++)
+        {
+            if (sqrt(err.error(model, x1.col(i), x2.col(i))) < ACRansacOut.first)
+            {
+                count++;
+            }
+        }
+        
+        if (count < 1000)
+        {
+            continue;
+        }
 
         reconstructedPairs.push_back(outputPair);
     }

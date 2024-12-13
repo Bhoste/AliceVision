@@ -120,6 +120,20 @@ if(ALICEVISION_BUILD_SFM)
               Boost::program_options
     )
 
+    alicevision_add_software(aliceVision_featureGeometricApplyingImages
+        SOURCE main_featureGeometricApplyingImages.cpp
+        FOLDER ${FOLDER_SOFTWARE_PIPELINE}
+        LINKS aliceVision_system
+              aliceVision_cmdline
+              aliceVision_feature
+              aliceVision_multiview
+              aliceVision_matchingImageCollection
+              aliceVision_sfm
+              aliceVision_sfmData
+              aliceVision_sfmDataIO
+              Boost::program_options
+    )
+
     # Track builder
     alicevision_add_software(aliceVision_tracksBuilding
         SOURCE main_tracksBuilding.cpp
